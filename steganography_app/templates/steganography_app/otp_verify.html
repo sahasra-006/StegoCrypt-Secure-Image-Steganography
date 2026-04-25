@@ -1,0 +1,111 @@
+{% extends 'steganography_app/base.html' %}
+{% block title %}OTP Verification — StegoCrypt{% endblock %}
+
+{% block extra_head %}
+<style>
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,160,0.2); }
+  50%       { box-shadow: 0 0 0 12px rgba(0,229,160,0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:480px;padding:3rem 1rem;">
+
+  <div class="fade-up mb-4 text-center">
+    <div style="width:72px;height:72px;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;animation:pulseGlow 2s infinite;">
+      <i class="bi bi-shield-lock-fill text-accent" style="font-size:2rem;"></i>
+    </div>
+    <div class="step-pill mx-auto"><i class="bi bi-unlock me-1"></i>Decode — Step 2 of 2</div>
+    <h1 style="font-size:2rem;">Enter Your OTP</h1>
+    <p style="color:var(--text-muted);">
+      A 6-digit code was sent to<br>
+      <strong style="color:var(--text);">{{ user.email }}</strong>
+    </p>
+  </div>
+
+  <div class="d-flex align-items-center gap-3 mb-4 fade-up-2">
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <div style="width:28px;height:28px;background:rgba(0,229,160,0.2);border:1px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--accent);">
+        <i class="bi bi-check2"></i>
+      </div>
+      <span style="font-size:0.85rem;color:var(--text-muted);">Upload &amp; Password</span>
+    </div>
+    <div style="height:1px;flex:1;background:var(--accent);opacity:0.4;"></div>
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <div style="width:28px;height:28px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#0a0c10;">2</div>
+      <span style="font-size:0.85rem;">OTP Verify</span>
+    </div>
+  </div>
+
+  <div class="stego-card fade-up-2">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="mb-4">
+        <label class="form-label text-center d-block" for="{{ form.otp.id_for_label }}">
+          <i class="bi bi-123 me-1"></i>6-Digit OTP Code
+        </label>
+        <input
+          type="text"
+          name="otp"
+          id="{{ form.otp.id_for_label }}"
+          class="form-control"
+          placeholder="000000"
+          maxlength="6"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          pattern="[0-9]{6}"
+          style="font-family:var(--mono);font-size:2rem;letter-spacing:0.5rem;text-align:center;padding:1rem;"
+          autofocus
+        >
+        {% if form.otp.errors %}
+          <div class="form-text text-center" style="color:var(--accent3);">{{ form.otp.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="text-center mb-4">
+        <span style="color:var(--text-muted);font-size:0.85rem;">
+          OTP expires in <span id="countdown" class="mono text-accent">05:00</span>
+        </span>
+      </div>
+
+      <button type="submit" class="btn btn-primary-custom w-100 mb-3" style="font-size:1rem;padding:0.8rem;">
+        <i class="bi bi-check-circle me-2"></i>Verify OTP &amp; Decode
+      </button>
+
+      <div class="text-center">
+        <span style="color:var(--text-muted);font-size:0.85rem;">Didn't receive it?</span>
+        <a href="{% url 'resend_otp' %}" style="color:var(--accent);text-decoration:none;font-size:0.85rem;margin-left:0.4rem;">
+          <i class="bi bi-arrow-clockwise me-1"></i>Resend OTP
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <p class="text-center mt-3" style="color:var(--text-muted);font-size:0.8rem;">
+    <i class="bi bi-info-circle me-1"></i>
+    In development mode, the OTP prints to the <strong>server terminal</strong>.
+  </p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let timeLeft = 5 * 60;
+  const el = document.getElementById('countdown');
+  const tick = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) { clearInterval(tick); el.textContent = 'Expired'; el.style.color = 'var(--accent3)'; return; }
+    const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const s = String(timeLeft % 60).padStart(2, '0');
+    el.textContent = m + ':' + s;
+    if (timeLeft < 60) el.style.color = 'var(--accent3)';
+  }, 1000);
+
+  document.getElementById('{{ form.otp.id_for_label }}').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+  });
+</script>
+{% endblock %}

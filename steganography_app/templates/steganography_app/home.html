@@ -1,0 +1,147 @@
+{% extends 'steganography_app/base.html' %}
+
+{% block title %}StegoCrypt — Hide Secrets in Plain Sight{% endblock %}
+
+{% block content %}
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<section style="padding: 5rem 0 4rem; position:relative; overflow:hidden;">
+  <!-- Decorative grid lines -->
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,160,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;"></div>
+
+  <div class="container text-center" style="position:relative;z-index:1;">
+    <div class="fade-up">
+      <div class="step-pill mx-auto">
+        <i class="bi bi-shield-check"></i>
+        AES-256 + OTP 2FA + LSB Steganography
+      </div>
+    </div>
+
+    <h1 class="fade-up-2" style="font-size:clamp(2.5rem,7vw,4.5rem);line-height:1.05;margin-bottom:1.5rem;">
+      Hide Secrets<br>
+      <span style="background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Inside Images</span>
+    </h1>
+
+    <p class="fade-up-3" style="color:var(--text-muted);font-size:1.1rem;max-width:560px;margin:0 auto 2.5rem;">
+      Military-grade encryption meets invisible data hiding.
+      Embed encrypted messages into images that look completely normal.
+    </p>
+
+    <div class="d-flex gap-3 justify-content-center fade-up-3">
+      <a href="{% url 'signup' %}" class="btn btn-primary-custom" style="font-size:1rem;padding:0.8rem 2rem;">
+        Start for Free <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+      <a href="#how-it-works" class="btn btn-secondary-custom" style="font-size:1rem;padding:0.8rem 2rem;">
+        How It Works
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Feature Cards ──────────────────────────────────────────────────────── -->
+<section style="padding:2rem 0 4rem;">
+  <div class="container">
+    <div class="row g-4">
+
+      <div class="col-md-4">
+        <div class="stego-card h-100">
+          <div style="width:44px;height:44px;background:rgba(0,229,160,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+            <i class="bi bi-key-fill text-accent fs-5"></i>
+          </div>
+          <h5>Fernet Encryption</h5>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin:0;">
+            Messages are encrypted with AES-128-CBC + HMAC before hiding. Wrong password = garbage output. Your key, your data.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="stego-card h-100">
+          <div style="width:44px;height:44px;background:rgba(0,150,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+            <i class="bi bi-phone text-accent2 fs-5"></i>
+          </div>
+          <h5>OTP Two-Factor Auth</h5>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin:0;">
+            Every decode requires a one-time password sent to your email. Even with the image and password, no OTP = no access.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="stego-card h-100">
+          <div style="width:44px;height:44px;background:rgba(255,95,109,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+            <i class="bi bi-eye-slash-fill" style="color:var(--accent3)" ></i>
+          </div>
+          <h5>LSB Steganography</h5>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin:0;">
+            Least-Significant Bit technique makes images visually identical. No metadata, no headers — completely invisible to the eye.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ───────────────────────────────────────────────────────── -->
+<section id="how-it-works" style="padding:3rem 0 5rem;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="text-center mb-4">
+      <div class="step-pill mx-auto">How It Works</div>
+      <h2 style="font-size:2rem;">Three layers of protection</h2>
+    </div>
+
+    <div class="row g-4 mt-2">
+      <!-- Encode flow -->
+      <div class="col-lg-6">
+        <div class="stego-card">
+          <h5 class="mb-3"><i class="bi bi-lock-fill text-accent me-2"></i>Encode Flow</h5>
+          <div class="d-flex flex-column gap-2">
+            {% for step in "1234"|make_list %}
+            <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+              <span class="badge-accent" style="min-width:24px;text-align:center;margin-top:2px;">{{ forloop.counter }}</span>
+              <span style="color:var(--text-muted);font-size:0.875rem;">
+                {% if forloop.counter == 1 %}Upload any image (JPG/PNG/BMP){% endif %}
+                {% if forloop.counter == 2 %}Enter your secret message + password{% endif %}
+                {% if forloop.counter == 3 %}Message is encrypted with Fernet (AES-128){% endif %}
+                {% if forloop.counter == 4 %}Encrypted bits replace image LSBs → download PNG{% endif %}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Decode flow -->
+      <div class="col-lg-6">
+        <div class="stego-card">
+          <h5 class="mb-3"><i class="bi bi-unlock-fill text-accent2 me-2"></i>Decode Flow (2FA)</h5>
+          <div class="d-flex flex-column gap-2">
+            {% for step in "12345"|make_list %}
+            <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+              <span class="badge-accent" style="min-width:24px;text-align:center;margin-top:2px;background:rgba(0,150,255,0.1);color:var(--accent2);border-color:rgba(0,150,255,0.25);">{{ forloop.counter }}</span>
+              <span style="color:var(--text-muted);font-size:0.875rem;">
+                {% if forloop.counter == 1 %}Upload encoded image + enter password{% endif %}
+                {% if forloop.counter == 2 %}System sends OTP to your email{% endif %}
+                {% if forloop.counter == 3 %}Enter 6-digit OTP (expires in 5 min){% endif %}
+                {% if forloop.counter == 4 %}LSB extraction → Fernet decryption{% endif %}
+                {% if forloop.counter == 5 %}Original message revealed{% endif %}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ────────────────────────────────────────────────────────────────── -->
+<section style="padding:5rem 0;text-align:center;">
+  <div class="container">
+    <h2 style="font-size:2rem;margin-bottom:1rem;">Ready to hide your first secret?</h2>
+    <p style="color:var(--text-muted);margin-bottom:2rem;">Free account. No credit card. Unlimited encodings.</p>
+    <a href="{% url 'signup' %}" class="btn btn-primary-custom" style="font-size:1rem;padding:0.85rem 2.5rem;">
+      Create Account <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+  </div>
+</section>
+{% endblock %}

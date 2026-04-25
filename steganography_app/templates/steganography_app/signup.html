@@ -1,0 +1,44 @@
+{% extends 'steganography_app/base.html' %}
+{% block title %}Sign Up — StegoCrypt{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:460px;padding:4rem 1rem;">
+  <div class="text-center mb-4 fade-up">
+    <div class="step-pill mx-auto">New Account</div>
+    <h1 style="font-size:2rem;">Create Account</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">
+      Your email is required for OTP-based 2FA during decoding.
+    </p>
+  </div>
+
+  <div class="stego-card fade-up-2">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+            <div class="form-text">{{ field.help_text }}</div>
+          {% endif %}
+          {% for error in field.errors %}
+            <div class="form-text" style="color:var(--accent3);">
+              <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <button type="submit" class="btn btn-primary-custom w-100 mt-2">
+        <i class="bi bi-person-plus me-2"></i>Create Account
+      </button>
+    </form>
+  </div>
+
+  <p class="text-center mt-3" style="color:var(--text-muted);font-size:0.875rem;">
+    Already have an account?
+    <a href="{% url 'login' %}" style="color:var(--accent);text-decoration:none;">Sign in</a>
+  </p>
+</div>
+{% endblock %}

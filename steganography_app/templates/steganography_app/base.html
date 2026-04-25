@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}StegoCrypt — Secure Image Steganography{% endblock %}</title>
+
+  <!-- Google Fonts: Syne (display) + IBM Plex Mono (mono) + Inter (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    /* ── CSS Variables ─────────────────────────────────────────── */
+    :root {
+      --bg:        #0a0c10;
+      --bg2:       #0f1218;
+      --bg3:       #161b24;
+      --border:    #1e2633;
+      --accent:    #00e5a0;
+      --accent2:   #0096ff;
+      --accent3:   #ff5f6d;
+      --text:      #e2e8f0;
+      --text-muted:#6b7a90;
+      --card-bg:   #111620;
+      --mono:      'IBM Plex Mono', monospace;
+      --display:   'Syne', sans-serif;
+      --body:      'Inter', sans-serif;
+      --radius:    12px;
+      --glow:      0 0 20px rgba(0,229,160,0.15);
+    }
+
+    /* ── Reset & Base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-weight: 300;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,160,0.07) 0%, transparent 60%),
+        linear-gradient(135deg, transparent 30%, rgba(0,150,255,0.03) 100%);
+    }
+
+    main { flex: 1; }
+
+    /* ── Noise texture overlay ─────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ── Typography ────────────────────────────────────────────── */
+    h1, h2, h3, h4, h5 { font-family: var(--display); font-weight: 700; }
+    .mono { font-family: var(--mono); }
+
+    /* ── Navbar ────────────────────────────────────────────────── */
+    .navbar {
+      background: rgba(10,12,16,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar-brand {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: var(--accent) !important;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .navbar-brand .brand-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+
+    .nav-link {
+      color: var(--text-muted) !important;
+      font-size: 0.875rem;
+      font-weight: 400;
+      transition: color 0.2s;
+      padding: 0.4rem 0.75rem !important;
+    }
+
+    .nav-link:hover { color: var(--text) !important; }
+
+    .nav-link.active { color: var(--accent) !important; }
+
+    /* ── Buttons ───────────────────────────────────────────────── */
+    .btn-primary-custom {
+      background: var(--accent);
+      color: #0a0c10;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem 1.5rem;
+      transition: all 0.2s;
+      font-family: var(--body);
+      letter-spacing: 0.3px;
+    }
+
+    .btn-primary-custom:hover {
+      background: #00ffb3;
+      color: #0a0c10;
+      box-shadow: var(--glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary-custom {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 1.5rem;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary-custom:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-danger-custom {
+      background: rgba(255,95,109,0.1);
+      color: var(--accent3);
+      border: 1px solid rgba(255,95,109,0.3);
+      border-radius: 8px;
+      padding: 0.65rem 1.5rem;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .btn-danger-custom:hover {
+      background: rgba(255,95,109,0.2);
+    }
+
+    /* ── Cards ─────────────────────────────────────────────────── */
+    .stego-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      transition: border-color 0.2s;
+    }
+
+    .stego-card:hover { border-color: rgba(0,229,160,0.2); }
+
+    /* ── Form Controls ─────────────────────────────────────────── */
+    .form-control, .form-select {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.65rem 0.875rem;
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background: var(--bg3);
+      color: var(--text);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+      outline: none;
+    }
+
+    .form-control::placeholder { color: var(--text-muted); }
+    .form-label {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    .form-text { color: var(--text-muted); font-size: 0.8rem; }
+
+    /* ── Alerts ────────────────────────────────────────────────── */
+    .alert {
+      border-radius: 8px;
+      border: none;
+      font-size: 0.875rem;
+    }
+
+    .alert-success {
+      background: rgba(0,229,160,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,229,160,0.2);
+    }
+
+    .alert-danger {
+      background: rgba(255,95,109,0.1);
+      color: #ff8a94;
+      border: 1px solid rgba(255,95,109,0.2);
+    }
+
+    .alert-info {
+      background: rgba(0,150,255,0.1);
+      color: #60b4ff;
+      border: 1px solid rgba(0,150,255,0.2);
+    }
+
+    .alert-warning {
+      background: rgba(255,190,0,0.1);
+      color: #ffc940;
+      border: 1px solid rgba(255,190,0,0.2);
+    }
+
+    /* ── Badge / Tag ───────────────────────────────────────────── */
+    .badge-accent {
+      background: rgba(0,229,160,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,229,160,0.25);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Page section headers ──────────────────────────────────── */
+    .page-header {
+      padding: 3rem 0 2rem;
+    }
+
+    .page-header h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 550px;
+    }
+
+    /* ── Divider ───────────────────────────────────────────────── */
+    .stego-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 2rem 0;
+    }
+
+    /* ── Pill step indicator ───────────────────────────────────── */
+    .step-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(0,229,160,0.07);
+      border: 1px solid rgba(0,229,160,0.15);
+      border-radius: 999px;
+      padding: 0.3rem 0.8rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 0;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    /* ── Animations ────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-up { animation: fadeUp 0.4s ease forwards; }
+    .fade-up-2 { animation: fadeUp 0.4s 0.1s ease forwards; opacity: 0; }
+    .fade-up-3 { animation: fadeUp 0.4s 0.2s ease forwards; opacity: 0; }
+
+    /* ── Misc utilities ────────────────────────────────────────── */
+    .text-accent { color: var(--accent); }
+    .text-accent2 { color: var(--accent2); }
+    .text-muted-custom { color: var(--text-muted); }
+    .border-accent { border-color: var(--accent) !important; }
+
+    /* ── File input custom ─────────────────────────────────────── */
+    input[type="file"].form-control {
+      color: var(--text-muted);
+    }
+
+    input[type="file"].form-control::-webkit-file-upload-button {
+      background: var(--bg3);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-right: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    /* ── Capacity bar ──────────────────────────────────────────── */
+    .capacity-bar {
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .capacity-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'home' %}">
+      <span class="brand-icon"><i class="bi bi-shield-lock-fill" style="color:#0a0c10"></i></span>
+      StegoCrypt
+    </a>
+
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <i class="bi bi-list text-accent" style="font-size:1.4rem"></i>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+               href="{% url 'dashboard' %}">
+              <i class="bi bi-grid me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'encode' %}active{% endif %}"
+               href="{% url 'encode' %}">
+              <i class="bi bi-lock me-1"></i>Encode
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'decode' %}active{% endif %}"
+               href="{% url 'decode' %}">
+              <i class="bi bi-unlock me-1"></i>Decode
+            </a>
+          </li>
+          <li class="nav-item ms-2">
+            <span class="mono" style="color:var(--text-muted);font-size:0.8rem">
+              <i class="bi bi-person-circle me-1"></i>{{ user.username }}
+            </span>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'logout' %}" class="btn btn-danger-custom ms-2">
+              <i class="bi bi-box-arrow-right me-1"></i>Logout
+            </a>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login' %}">Login</a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'signup' %}" class="btn btn-primary-custom ms-2">
+              Get Started
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Flash Messages ──────────────────────────────────────────────────────── -->
+{% if messages %}
+<div class="container mt-3">
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── Main Content ────────────────────────────────────────────────────────── -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <p class="mb-0">
+      <span class="text-accent mono">StegoCrypt</span>
+      &nbsp;·&nbsp; Secure Image Steganography
+      &nbsp;·&nbsp; <a href="{% url 'home' %}">Home</a>
+      {% if user.is_authenticated %}
+        &nbsp;·&nbsp; <a href="{% url 'dashboard' %}">Dashboard</a>
+      {% endif %}
+    </p>
+  </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

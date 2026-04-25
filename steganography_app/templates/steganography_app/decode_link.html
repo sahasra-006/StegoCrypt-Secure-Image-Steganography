@@ -1,0 +1,64 @@
+{% extends 'steganography_app/base.html' %}
+{% block title %}Decode via Link — StegoCrypt{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:600px;padding:3rem 1rem;">
+  <div class="fade-up mb-4">
+    <div class="step-pill"><i class="bi bi-link-45deg me-1"></i>Shared Image — Step 1 of 2</div>
+    <h1 style="font-size:2rem;">Decode Shared Image</h1>
+    <p style="color:var(--text-muted);">Enter the password to receive your OTP and reveal the hidden message.</p>
+  </div>
+
+  <div class="stego-card fade-up-2 mb-4" style="padding:1.25rem;">
+    <div class="d-flex align-items-center gap-3">
+      <div style="width:64px;height:64px;background:var(--bg3);border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);">
+        <img src="{{ encoded_record.encoded_image.url }}" alt="Encoded image"
+             style="width:100%;height:100%;object-fit:cover;">
+      </div>
+      <div>
+        {% if encoded_record.label %}<div style="font-weight:600;font-size:0.95rem;">{{ encoded_record.label }}</div>{% endif %}
+        <div class="mono" style="font-size:0.75rem;color:var(--text-muted);">{{ encoded_record.unique_id }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">
+          By <strong>{{ encoded_record.user.username }}</strong> on {{ encoded_record.created_at|date:"M d, Y" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center gap-3 mb-4 fade-up-2">
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <div style="width:28px;height:28px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#0a0c10;">1</div>
+      <span style="font-size:0.85rem;">Enter Password</span>
+    </div>
+    <div style="height:1px;flex:1;background:var(--border);"></div>
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <div style="width:28px;height:28px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--text-muted);">2</div>
+      <span style="font-size:0.85rem;color:var(--text-muted);">OTP Verify</span>
+    </div>
+  </div>
+
+  <div class="stego-card fade-up-2">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="form-label" for="{{ form.password.id_for_label }}">
+          <i class="bi bi-key me-1"></i>Decryption Password
+        </label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <div class="form-text" style="color:var(--accent3);">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+      <div class="alert alert-info d-flex gap-2 align-items-start mb-4">
+        <i class="bi bi-shield-lock mt-1" style="flex-shrink:0;"></i>
+        <div style="font-size:0.85rem;">
+          A <strong>6-digit OTP</strong> will be sent to <strong>{{ user.email }}</strong>.
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary-custom w-100" style="font-size:1rem;padding:0.8rem;">
+        <i class="bi bi-send me-2"></i>Send OTP &amp; Continue
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'steganography_app/base.html' %}
+{% block title %}Encode Message — StegoCrypt{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:700px;padding:3rem 1rem;">
+
+  <div class="fade-up mb-4">
+    <div class="step-pill"><i class="bi bi-lock me-1"></i>Encode</div>
+    <h1 style="font-size:2rem;">Hide a Secret Message</h1>
+    <p style="color:var(--text-muted);">
+      Your message is encrypted with Fernet before being embedded into the image pixels.
+      The encoded image looks visually identical to the original.
+    </p>
+  </div>
+
+  <div class="stego-card fade-up-2">
+    <form method="post" enctype="multipart/form-data" id="encodeForm" novalidate>
+      {% csrf_token %}
+
+      <!-- Image Upload -->
+      <div class="mb-4">
+        <label class="form-label" for="{{ form.image.id_for_label }}">
+          <i class="bi bi-image me-1"></i>Cover Image
+        </label>
+        {{ form.image }}
+        {% if form.image.errors %}
+          <div class="form-text" style="color:var(--accent3);">{{ form.image.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text">{{ form.image.help_text }}</div>
+
+        <!-- Capacity display (populated via JS) -->
+        <div id="capacityInfo" style="display:none;margin-top:0.75rem;">
+          <div class="d-flex justify-content-between mb-1">
+            <small style="color:var(--text-muted);">Image Capacity</small>
+            <small id="capacityText" class="mono text-accent"></small>
+          </div>
+          <div class="capacity-bar">
+            <div class="capacity-bar-fill" id="capacityBar" style="width:0%"></div>
+          </div>
+          <div class="d-flex justify-content-between mt-1">
+            <small style="color:var(--text-muted);" id="imgDimensions"></small>
+            <small style="color:var(--text-muted);" id="msgSize"></small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Secret Message -->
+      <div class="mb-4">
+        <label class="form-label" for="{{ form.message.id_for_label }}">
+          <i class="bi bi-chat-square-text me-1"></i>Secret Message
+        </label>
+        {{ form.message }}
+        {% if form.message.errors %}
+          <div class="form-text" style="color:var(--accent3);">{{ form.message.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text" id="charCount">0 characters</div>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-4">
+        <label class="form-label" for="{{ form.password.id_for_label }}">
+          <i class="bi bi-key me-1"></i>Encryption Password
+        </label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <div class="form-text" style="color:var(--accent3);">{{ form.password.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text">{{ form.password.help_text }}</div>
+      </div>
+
+      <!-- Label (optional) -->
+      <div class="mb-4">
+        <label class="form-label" for="{{ form.label.id_for_label }}">
+          <i class="bi bi-tag me-1"></i>Label <span style="color:var(--text-muted);font-size:0.75rem;text-transform:none;letter-spacing:0;">(optional)</span>
+        </label>
+        {{ form.label }}
+      </div>
+
+      <!-- Info banner -->
+      <div class="alert alert-info d-flex gap-2 align-items-start mb-4">
+        <i class="bi bi-info-circle-fill mt-1" style="flex-shrink:0;"></i>
+        <div style="font-size:0.85rem;">
+          <strong>After encoding:</strong> Download the PNG image from your dashboard.
+          Share it — but keep the password private. The recipient needs both the image <em>and</em> password to decode, plus OTP verification.
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary-custom w-100" id="submitBtn" style="font-size:1rem;padding:0.8rem;">
+        <i class="bi bi-lock-fill me-2"></i>Encode & Save Image
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const messageField = document.getElementById('{{ form.message.id_for_label }}');
+  const charCount    = document.getElementById('charCount');
+  const imageField   = document.getElementById('{{ form.image.id_for_label }}');
+  const capacityInfo = document.getElementById('capacityInfo');
+  const capacityText = document.getElementById('capacityText');
+  const capacityBar  = document.getElementById('capacityBar');
+  const imgDim       = document.getElementById('imgDimensions');
+  const msgSizeEl    = document.getElementById('msgSize');
+
+  let imageCapacityBytes = 0;
+
+  // ── Character counter ──────────────────────────────────────────────────────
+  messageField.addEventListener('input', () => {
+    const len = messageField.value.length;
+    charCount.textContent = `${len} character${len !== 1 ? 's' : ''}`;
+    updateCapacityBar(len);
+  });
+
+  // ── Capacity check on image select ────────────────────────────────────────
+  imageField.addEventListener('change', async () => {
+    if (!imageField.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('image', imageField.files[0]);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    try {
+      const res = await fetch('{% url "capacity_check" %}', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.success) {
+        imageCapacityBytes = data.capacity_bytes;
+        capacityInfo.style.display = 'block';
+        capacityText.textContent = `${data.capacity_bytes.toLocaleString()} bytes (${data.capacity_kb} KB)`;
+        imgDim.textContent = `${data.width} × ${data.height} px`;
+        updateCapacityBar(messageField.value.length);
+      }
+    } catch (e) {
+      console.error('Capacity check failed', e);
+    }
+  });
+
+  function updateCapacityBar(msgChars) {
+    if (!imageCapacityBytes) return;
+    // Estimate: encrypted payload ≈ 1.5× original (Fernet overhead)
+    const estimatedBytes = Math.ceil(msgChars * 1.5) + 50;
+    const pct = Math.min(100, Math.round((estimatedBytes / imageCapacityBytes) * 100));
+    capacityBar.style.width = pct + '%';
+    capacityBar.style.background = pct > 85
+      ? 'linear-gradient(90deg,#ff5f6d,#ff8a94)'
+      : 'linear-gradient(90deg,var(--accent),var(--accent2))';
+    msgSizeEl.textContent = `~${estimatedBytes} bytes used`;
+  }
+
+  // ── Prevent double-submit ─────────────────────────────────────────────────
+  document.getElementById('encodeForm').addEventListener('submit', () => {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Encoding...';
+  });
+</script>
+{% endblock %}
