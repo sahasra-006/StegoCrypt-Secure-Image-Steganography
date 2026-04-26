@@ -1,10 +1,10 @@
-# 🔐 StegoCrypt — Secure Image Steganography Web Application
+# StegoCrypt — Secure Image Steganography Web Application
 
 A production-ready Django web application that hides encrypted messages inside images using **LSB Steganography**, **Fernet Encryption (AES-128-CBC)**, and **OTP-based Two-Factor Authentication**.
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Details |
 |---|---|
@@ -19,7 +19,7 @@ A production-ready Django web application that hides encrypted messages inside i
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 steganography_project/
@@ -62,7 +62,7 @@ steganography_project/
 
 ---
 
-## 🚀 STEP 1: Setup & Installation
+##  STEP 1: Setup & Installation
 
 ### 1.1 Create virtual environment
 
@@ -108,7 +108,7 @@ Open: **http://127.0.0.1:8000/**
 
 ---
 
-## 📧 STEP 2: Email / OTP Configuration
+##  STEP 2: Email / OTP Configuration
 
 ### Development (default — OTP printed to terminal)
 
@@ -135,7 +135,7 @@ DEFAULT_FROM_EMAIL = 'your@gmail.com'
 
 ---
 
-## 🔄 How Each Flow Works
+## How Each Flow Works
 
 ### Encode Flow
 
@@ -178,7 +178,7 @@ Message displayed to user
 
 ---
 
-## 🔐 Security Architecture
+## Security Architecture
 
 ### Encryption
 - **Algorithm:** Fernet = AES-128-CBC + HMAC-SHA256
@@ -206,7 +206,7 @@ A 800×600 image → 180,000 bytes capacity (~175 KB of message).
 
 ---
 
-## 🌐 URL Reference
+## URL Reference
 
 | URL | View | Auth Required |
 |---|---|---|
@@ -225,7 +225,7 @@ A 800×600 image → 180,000 bytes capacity (~175 KB of message).
 
 ---
 
-## ☁️ Production Deployment Guide
+## Production Deployment Guide
 
 ### Option A: Render (free tier)
 
@@ -291,7 +291,7 @@ CSRF_COOKIE_SECURE = True
 
 ---
 
-## 🧪 Quick Smoke Test (without browser)
+## Quick Smoke Test (without browser)
 
 ```bash
 # 1. Start server
