@@ -1,4 +1,4 @@
-# StegoCrypt — Secure Image Steganography Web Application
+# Secure Image Steganography Web Application
 
 A production-ready Django web application that hides encrypted messages inside images using **LSB Steganography**, **Fernet Encryption (AES-128-CBC)**, and **OTP-based Two-Factor Authentication**.
 
